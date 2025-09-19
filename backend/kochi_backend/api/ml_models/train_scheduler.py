@@ -145,36 +145,102 @@ class TrainScheduler:
         standby_slots = {}
         time_slots = self._generate_time_slots(date)
         
-        # Target numbers for balanced distribution
+        # Target numbers prioritizing service
         total_trains = len(train_data_list)
-        target_service = max(total_trains // 2, 1)  # 50% for service
-        target_maintenance = max(total_trains // 4, 1)  # 25% for maintenance
-        target_standby = total_trains - target_service - target_maintenance  # Remaining for standby
+        target_service = max(int(total_trains * 0.6), 1)  # 60% for service
+        target_standby = max(int(total_trains * 0.25), 1)  # 25% for standby
+        target_maintenance = total_trains - target_service - target_standby  # 15% for maintenance
         
-        # Distribute trains based on constraints and targets
+        # Sort by priority score to ensure high-priority trains are scheduled first
+        train_data_list.sort(key=lambda x: x[2], reverse=True)
+        
+        # First pass: Schedule service trains during peak hours
         for train_id, train_data, priority in train_data_list:
             current_hour = datetime.now().hour
             is_peak = (self.peak_hours['morning']['start'] <= current_hour <= self.peak_hours['morning']['end']) or \
                      (self.peak_hours['evening']['start'] <= current_hour <= self.peak_hours['evening']['end'])
             
-            # Check maintenance requirements first
             maintenance_needed = any(j['status'].lower() == 'open' for j in train_data['jobs'])
             
-            # Determine appropriate slot based on conditions
+            if not maintenance_needed and is_peak and len(service_slots) < target_service:
+                task = 'service'
+                slots = service_slots
+                for slot in time_slots:
+                    slot_key = f"{slot}_{train_id}"
+                    if slot_key not in slots and self._is_slot_available(train_data, slot):
+                        slots[slot_key] = train_id
+                        schedule.append({
+                            'train_id': train_id,
+                            'time_slot': slot,
+                            'task': task,
+                            'reasoning': self._generate_reasoning(train_data, slot)
+                        })
+                        break
+        
+        # Second pass: Schedule remaining service trains
+        for train_id, train_data, priority in train_data_list:
+            if any(s['train_id'] == train_id for s in schedule):
+                continue
+                
+            maintenance_needed = any(j['status'].lower() == 'open' for j in train_data['jobs'])
+            if not maintenance_needed and len(service_slots) < target_service:
+                task = 'service'
+                slots = service_slots
+                for slot in time_slots:
+                    slot_key = f"{slot}_{train_id}"
+                    if slot_key not in slots and self._is_slot_available(train_data, slot):
+                        slots[slot_key] = train_id
+                        schedule.append({
+                            'train_id': train_id,
+                            'time_slot': slot,
+                            'task': task,
+                            'reasoning': self._generate_reasoning(train_data, slot)
+                        })
+                        break
+        
+        # Third pass: Schedule standby trains
+        for train_id, train_data, priority in train_data_list:
+            if any(s['train_id'] == train_id for s in schedule):
+                continue
+                
+            maintenance_needed = any(j['status'].lower() == 'open' for j in train_data['jobs'])
+            if not maintenance_needed and len(standby_slots) < target_standby:
+                task = 'standby'
+                slots = standby_slots
+                for slot in time_slots:
+                    slot_key = f"{slot}_{train_id}"
+                    if slot_key not in slots and self._is_slot_available(train_data, slot):
+                        slots[slot_key] = train_id
+                        schedule.append({
+                            'train_id': train_id,
+                            'time_slot': slot,
+                            'task': task,
+                            'reasoning': self._generate_reasoning(train_data, slot)
+                        })
+                        break
+        
+        # Final pass: Schedule maintenance during maintenance hours
+        for train_id, train_data, priority in train_data_list:
+            if any(s['train_id'] == train_id for s in schedule):
+                continue
+                
+            maintenance_needed = any(j['status'].lower() == 'open' for j in train_data['jobs'])
             if maintenance_needed and len(maintenance_slots) < target_maintenance:
                 task = 'maintenance'
                 slots = maintenance_slots
-            elif is_peak and len(service_slots) < target_service:
-                task = 'service'
-                slots = service_slots
-            elif len(standby_slots) < target_standby:
-                task = 'standby'
-                slots = standby_slots
-            elif len(service_slots) < target_service:
-                task = 'service'
-                slots = service_slots
-            else:
-                continue  # Skip if all slots are filled
+                for slot in time_slots:
+                    slot_hour = int(slot.split(':')[0])
+                    if (0 <= slot_hour <= 4) or (slot_hour == 23):  # Maintenance hours
+                        slot_key = f"{slot}_{train_id}"
+                        if slot_key not in slots and self._is_slot_available(train_data, slot):
+                            slots[slot_key] = train_id
+                            schedule.append({
+                                'train_id': train_id,
+                                'time_slot': slot,
+                                'task': task,
+                                'reasoning': self._generate_reasoning(train_data, slot)
+                            })
+                            break
                 
             # Find optimal time slot
             best_slot = None
@@ -287,33 +353,48 @@ class TrainScheduler:
             return 30
             
     def _calculate_priority_score(self, train, jobs, is_peak):
-        """Calculate priority score for scheduling"""
+        """Calculate priority score for scheduling with task prioritization"""
         score = 0
         
-        # Maintenance priority
-        days_since_maintenance = self._days_since_last_maintenance(jobs)
-        if days_since_maintenance > 25:  # High priority if approaching 30 days
-            score += 50
-        elif days_since_maintenance > 20:
-            score += 30
+        # Check if train needs maintenance
+        maintenance_needed = any(j['status'].lower() == 'open' for j in jobs)
+        
+        # Base priority by task type (service > standby > maintenance)
+        if not maintenance_needed:
+            if is_peak:
+                score += 1000  # Highest priority for service during peak hours
+            else:
+                score += 800   # High priority for regular service hours
+        else:
+            score += 100      # Lowest base priority for maintenance
             
-        # Peak hour priority
-        if is_peak:
-            score += 40
+        # Peak hour priority (additional boost for service)
+        if is_peak and not maintenance_needed:
+            score += 200
             
-        # Mileage priority
-        mileage = float(train.get('mileage', 0))
-        if mileage > 8000:
-            score += 30
-        elif mileage > 5000:
-            score += 20
-            
-        # Passenger load priority
+        # Passenger load priority (favors service)
         passengers = int(train.get('passengers', 0))
         if passengers > 1500:
-            score += 25
+            score += 150
         elif passengers > 1000:
-            score += 15
+            score += 100
+        elif passengers > 500:
+            score += 50
+            
+        # Mileage consideration
+        mileage = float(train.get('mileage', 0))
+        if mileage < 6000:  # Prefer trains with lower mileage for service
+            score += 100
+        elif mileage < 8000:
+            score += 50
+            
+        # Maintenance urgency (only if maintenance is needed)
+        if maintenance_needed:
+            days_since_maintenance = self._days_since_last_maintenance(jobs)
+            if days_since_maintenance > 25:
+                score += 80  # Higher priority as maintenance deadline approaches
+            elif days_since_maintenance > 20:
+                score += 40
             
         return score
 
