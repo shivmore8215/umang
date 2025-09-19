@@ -12,6 +12,12 @@ import Simulation from "./pages/Simulation";
 import TrainAudit from "./pages/TrainAudit";
 import InputUpload from "./pages/InputUpload";
 import Login from "./pages/Login";
+import FitnessCertificates from "./pages/FitnessCertificates";
+import JobCardStatus from "./pages/JobCardStatus";
+import BrandingPriorities from "./pages/BrandingPriorities";
+import MileageBalancing from "./pages/MileageBalancing";
+import CleaningDetailing from "./pages/CleaningDetailing";
+import StablingGeometry from "./pages/StablingGeometry";
 import translations from "./locales";
 
 function App() {
@@ -58,6 +64,12 @@ function App() {
           <Route path="/ml-analysis" element={<Shell><MLAnalysis /></Shell>} />
           <Route path="/simulation" element={<Shell><Simulation /></Shell>} />
           <Route path="/train-audit" element={<Shell><TrainAudit /></Shell>} />
+          <Route path="/fitness-certificates" element={<Shell><FitnessCertificates t={t} /></Shell>} />
+          <Route path="/job-card-status" element={<Shell><JobCardStatus t={t} /></Shell>} />
+          <Route path="/branding-priorities" element={<Shell><BrandingPriorities t={t} /></Shell>} />
+          <Route path="/mileage-balancing" element={<Shell><MileageBalancing t={t} /></Shell>} />
+          <Route path="/cleaning-detailing" element={<Shell><CleaningDetailing t={t} /></Shell>} />
+          <Route path="/stabling-geometry" element={<Shell><StablingGeometry t={t} /></Shell>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

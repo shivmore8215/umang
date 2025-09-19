@@ -44,12 +44,12 @@ export default function Sidebar({ t }) {
 
 
   const dataModules = [
-    { label: t.fitness, icon: <CheckCircleIcon /> },
-    { label: t.jobCard, icon: <BuildCircleIcon /> },
-    { label: t.branding, icon: <CampaignIcon /> },
-    { label: t.mileage, icon: <DirectionsCarIcon /> },
-    { label: t.cleaning, icon: <CleaningServicesIcon /> },
-    { label: t.stabling, icon: <PlaceIcon /> },
+    { label: t.fitness, icon: <CheckCircleIcon />, route: "/fitness-certificates" },
+    { label: t.jobCard, icon: <BuildCircleIcon />, route: "/job-card-status" },
+    { label: t.branding, icon: <CampaignIcon />, route: "/branding-priorities" },
+    { label: t.mileage, icon: <DirectionsCarIcon />, route: "/mileage-balancing" },
+    { label: t.cleaning, icon: <CleaningServicesIcon />, route: "/cleaning-detailing" },
+    { label: t.stabling, icon: <PlaceIcon />, route: "/stabling-geometry" },
   ];
 
   return (
@@ -129,27 +129,42 @@ export default function Sidebar({ t }) {
         <Typography variant="subtitle2" sx={{ pl: 2, pt: 1, pb: 0, color: isDark ? '#b0bec5' : 'text.secondary' }}>
           {t.dataModules}
         </Typography>
-        {dataModules.map((item) => (
-          <ListItem
-            button
-            key={item.label}
-            sx={{
-              mx: 1,
-              my: 0.5,
-              borderRadius: 2,
-              pl: 1.25,
-              pr: 1,
-              transition: 'background-color .15s ease, box-shadow .2s ease',
-              '&:hover': {
-                backgroundColor: isDark ? '#0f2025' : '#F3FFFE',
-                boxShadow: 'inset 0 0 0 1px #30D5C84d'
-              }
-            }}
-          >
-            <ListItemIcon sx={{ color: theme.palette.text.secondary, minWidth: 36 }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} primaryTypographyProps={{ color: 'text.primary' }} />
-          </ListItem>
-        ))}
+        {dataModules.map((item) => {
+          const isActive = location.pathname === item.route;
+          return (
+            <ListItem
+              button
+              key={item.label}
+              component={RouterLink}
+              to={item.route}
+              sx={{
+                mx: 1,
+                my: 0.5,
+                borderRadius: 2,
+                pl: 1.25,
+                pr: 1,
+                transition: 'background-color .15s ease, box-shadow .2s ease',
+                backgroundColor: isActive ? (isDark ? '#112126' : '#E6FFFB') : 'transparent',
+                boxShadow: isActive ? (isDark ? 'inset 0 0 0 1px #30D5C899' : 'inset 0 0 0 1px #30D5C8') : 'none',
+                '&:hover': {
+                  backgroundColor: isDark ? '#0f2025' : '#F3FFFE',
+                  boxShadow: 'inset 0 0 0 1px #30D5C84d'
+                }
+              }}
+            >
+              <ListItemIcon sx={{ color: isActive ? '#30D5C8' : theme.palette.text.secondary, minWidth: 36 }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.label}
+                primaryTypographyProps={{
+                  fontWeight: isActive ? 700 : 500,
+                  color: 'text.primary'
+                }}
+              />
+            </ListItem>
+          );
+        })}
       </List>
     </Drawer>
   );

@@ -47,17 +47,17 @@ export default function Dashboard({ t }) {
 
   return (
     <Box
-          sx={{
-            px: { xs: 2, md: 3 },
-            py: { xs: 2, md: 3 },
-            minHeight: "100vh",
-            background: isDark
-              ? `linear-gradient(180deg, #0b1416 0%, #0b1416 100%)`
-              : `linear-gradient(180deg, ${PRIMARY}11 0%, #ffffff 35%)`,
-            boxSizing: 'border-box',
-            width: '100%'
-          }}
-        >
+      sx={{
+        px: { xs: 2, md: 3 },
+        py: { xs: 2, md: 3 },
+        minHeight: "100vh",
+        background: isDark
+          ? `linear-gradient(180deg, #0b1416 0%, #0b1416 100%)`
+          : `linear-gradient(180deg, ${PRIMARY}11 0%, #ffffff 35%)`,
+        boxSizing: 'border-box',
+        width: '100%'
+      }}
+    >
           {/* MAIN HEADINGS */}
           <Typography variant="h4" fontWeight={800} sx={{ mb: 0.5, color: 'text.primary' }}>
             {t.dashboardOverview}
@@ -66,9 +66,18 @@ export default function Dashboard({ t }) {
             {t.dashboardOverviewSubtitle}
           </Typography>
           {/* DASHBOARD CARDS - Even, Responsive, Identical Dimensions */}
-          <Grid container spacing={3} sx={{ mb: 3 }} alignItems="stretch">
+          <Grid
+            container
+            spacing={3}
+            sx={{ mb: 3, justifyContent: 'center', alignItems: 'stretch' }}
+          >
             {dashboardCards.map((card) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} xl={3} key={card.title} sx={{ display: "flex" }}>
+              <Grid
+                item
+                xs={12} sm={6} md={4} lg={3} xl={3}
+                key={card.title}
+                sx={{ display: "flex", justifyContent: "center", alignItems: "stretch" }}
+              >
                 <Paper
                   elevation={0}
                   sx={{
@@ -80,17 +89,21 @@ export default function Dashboard({ t }) {
                     border: `1px solid ${isDark ? '#ffffff22' : '#607D8B33'}`,
                     borderRadius: 2,
                     p: 3,
-                    minHeight: 160,
-                    height: '100%',
+                    minHeight: 200,
+                    maxHeight: 220,
+                    minWidth: 220,
+                    maxWidth: 260,
                     width: '100%',
+                    height: '100%',
                     boxShadow: isDark
                       ? "0 8px 20px rgba(0,0,0,0.5)"
                       : "0 10px 24px rgba(48,213,200,0.14)",
                     transition: 'transform .15s ease, box-shadow .2s ease, border-color .2s ease',
+                    m: 'auto',
                     "&:hover": {
                       borderColor: isDark ? '#30D5C844' : '#30D5C8',
-                      boxShadow: isDark 
-                        ? "0 16px 32px rgba(0,0,0,0.65)" 
+                      boxShadow: isDark
+                        ? "0 16px 32px rgba(0,0,0,0.65)"
                         : "0 14px 28px rgba(48,213,200,0.33)",
                       transform: "translateY(-3px)"
                     }

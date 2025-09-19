@@ -130,17 +130,17 @@ export default function Simulation() {
         {/* Left: Scenario Input & Templates */}
         <Grid item xs={12} md={4}>
           <Paper elevation={0} sx={{
-            p: 3, mb: 3,
+            p: 2, mb: 2,
             border: `1px solid ${isDark ? '#ffffff22' : '#607D8B33'}`,
-            boxShadow: isDark ? '0 8px 20px rgba(0,0,0,0.5)' : '0 10px 24px rgba(48,213,200,0.14)',
+            boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(48,213,200,0.10)',
             bgcolor: isDark ? '#0f1a1d' : '#ffffff', borderRadius: 2,
-            minHeight: 400,
-            height: '100%',
+            minHeight: 220,
+            height: 'auto',
             width: '100%',
             transition: 'transform .15s ease, box-shadow .2s ease, border-color .2s ease',
             '&:hover': {
-              transform: 'translateY(-3px)',
-              boxShadow: isDark ? '0 16px 32px rgba(0,0,0,0.65)' : '0 14px 28px rgba(48,213,200,0.33)',
+              transform: 'translateY(-2px)',
+              boxShadow: isDark ? '0 8px 16px rgba(0,0,0,0.45)' : '0 8px 16px rgba(48,213,200,0.18)',
               borderColor: isDark ? '#30D5C844' : '#30D5C8'
             }
           }}>
@@ -174,17 +174,17 @@ export default function Simulation() {
             </Box>
           </Paper>
           <Paper elevation={0} sx={{
-            p: 3,
+            p: 2,
             border: `1px solid ${isDark ? '#ffffff22' : '#607D8B33'}`,
-            boxShadow: isDark ? '0 8px 20px rgba(0,0,0,0.5)' : '0 10px 24px rgba(48,213,200,0.14)',
+            boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(48,213,200,0.10)',
             bgcolor: isDark ? '#0f1a1d' : '#ffffff', borderRadius: 2,
-            minHeight: 300,
-            height: '100%',
+            minHeight: 140,
+            height: 'auto',
             width: '100%',
             transition: 'transform .15s ease, box-shadow .2s ease, border-color .2s ease',
             '&:hover': {
-              transform: 'translateY(-3px)',
-              boxShadow: isDark ? '0 16px 32px rgba(0,0,0,0.65)' : '0 14px 28px rgba(48,213,200,0.33)',
+              transform: 'translateY(-2px)',
+              boxShadow: isDark ? '0 8px 16px rgba(0,0,0,0.45)' : '0 8px 16px rgba(48,213,200,0.18)',
               borderColor: isDark ? '#30D5C844' : '#30D5C8'
             }
           }}>
@@ -217,16 +217,16 @@ export default function Simulation() {
         {/* Right: Results */}
         <Grid item xs={12} md={8}>
           <Paper elevation={0} sx={{
-            p: 3, minHeight: 500,
+            p: 2, minHeight: 220,
             border: `1px solid ${isDark ? '#ffffff22' : '#607D8B33'}`,
-            boxShadow: isDark ? '0 8px 20px rgba(0,0,0,0.5)' : '0 10px 24px rgba(48,213,200,0.14)',
+            boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(48,213,200,0.10)',
             bgcolor: isDark ? '#0f1a1d' : '#ffffff', borderRadius: 2,
-            height: '100%',
+            height: 'auto',
             width: '100%',
             transition: 'transform .15s ease, box-shadow .2s ease, border-color .2s ease',
             '&:hover': {
-              transform: 'translateY(-3px)',
-              boxShadow: isDark ? '0 16px 32px rgba(0,0,0,0.65)' : '0 14px 28px rgba(48,213,200,0.33)',
+              transform: 'translateY(-2px)',
+              boxShadow: isDark ? '0 8px 16px rgba(0,0,0,0.45)' : '0 8px 16px rgba(48,213,200,0.18)',
               borderColor: isDark ? '#30D5C844' : '#30D5C8'
             }
           }}>
@@ -296,11 +296,11 @@ export default function Simulation() {
                 <Box sx={{ mb: 2 }}>
                   {solutionRows.map((row, idx) => (
                     <Paper key={idx} sx={{
-                      mb: 2, p: 2,
+                      mb: 1.2, p: 1.5,
                       border: `1px solid ${isDark ? '#ffffff22' : '#607D8B33'}`,
                       bgcolor: isDark ? '#0c181b' : '#FAFEFD',
                       borderRadius: 2,
-                      boxShadow: isDark ? '0 6px 16px rgba(0,0,0,0.45)' : '0 6px 16px rgba(48,213,200,0.12)'
+                      boxShadow: isDark ? '0 3px 8px rgba(0,0,0,0.25)' : '0 3px 8px rgba(48,213,200,0.08)'
                     }}>
                       <Typography fontWeight={600}>{row.title}</Typography>
                       <Typography fontSize={14} color="text.secondary" mb={1}>Impact: {row.details}</Typography>

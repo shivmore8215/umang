@@ -350,6 +350,23 @@ export default function TrainAudit() {
                     View Full Profile
                   </Button>
                 </Box>
+                {/* Map of locations to travel through */}
+                <Box mt={4}>
+                  <Typography variant="subtitle1" fontWeight={700} mb={1}>
+                    Map of Desired Locations
+                  </Typography>
+                  <Box sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: 2 }}>
+                    <iframe
+                      title="Train Route Map"
+                      width="100%"
+                      height="300"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      src="https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=Kochi+Metro+Rail"
+                    />
+                  </Box>
+                </Box>
               </>
             )}
           </Paper>
