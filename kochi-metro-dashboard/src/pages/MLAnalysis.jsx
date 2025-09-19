@@ -273,22 +273,38 @@ export default function MLAnalysis() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Train ID</TableCell>
-                  <TableCell>Time Slot</TableCell>
-                  <TableCell>Task</TableCell>
-                  <TableCell>Reasoning</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Train ID</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Time Slot</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: 150 }}>Task</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>Reasoning</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {schedule.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>{item.train_id}</TableCell>
-                    <TableCell>{item.time_slot}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                        {item.time_slot}
+                      </Typography>
+                    </TableCell>
                     <TableCell>
                       <Chip
-                        label={item.task}
+                        label={item.task.charAt(0).toUpperCase() + item.task.slice(1)}
                         color={getStatusColor(item.task)}
-                        size="small"
+                        size="medium"
+                        sx={{
+                          minWidth: 120,
+                          height: 32,
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          '& .MuiChip-label': {
+                            px: 2,
+                            display: 'block',
+                            width: '100%',
+                            textAlign: 'center'
+                          }
+                        }}
                       />
                     </TableCell>
                     <TableCell>{item.reasoning}</TableCell>
