@@ -30,28 +30,42 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { API_BASE } from "../api";
 
-const MetricCards = ({ modelStatus, schedule }) => [
-  {
-    label: "Model Status",
-    value: modelStatus === "trained" ? "Active" : "Inactive",
-    icon: <ScienceIcon color={modelStatus === "trained" ? "primary" : "action"} fontSize="large" />
-  },
-  {
-    label: "Schedules Generated",
-    value: schedule ? schedule.length : 0,
-    icon: <ShowChartIcon color="warning" fontSize="large" />
-  },
-  {
-    label: "Optimization Rate",
-    value: modelStatus === "trained" ? "87%" : "0%",
-    icon: <TrendingUpIcon color="success" fontSize="large" />
-  },
-  {
-    label: "Efficiency Gain",
-    value: modelStatus === "trained" ? "24.5%" : "0%",
-    icon: <BoltIcon color="primary" fontSize="large" />
-  }
-];
+const MetricCards = ({ modelStatus, schedule }) => {
+  // Calculate statistics from schedule
+  const getScheduleStats = () => {
+    if (!schedule) return { service: 0, maintenance: 0, standby: 0 };
+    return schedule.reduce((acc, item) => {
+      acc[item.task.toLowerCase()]++;
+      return acc;
+    }, { service: 0, maintenance: 0, standby: 0 });
+  };
+
+  const stats = getScheduleStats();
+  const total = schedule ? schedule.length : 0;
+
+  return [
+    {
+      label: "In Service",
+      value: `${stats.service} (${total ? Math.round((stats.service / total) * 100) : 0}%)`,
+      icon: <ShowChartIcon color="success" fontSize="large" />
+    },
+    {
+      label: "Under Maintenance",
+      value: `${stats.maintenance} (${total ? Math.round((stats.maintenance / total) * 100) : 0}%)`,
+      icon: <BoltIcon color="error" fontSize="large" />
+    },
+    {
+      label: "On Standby",
+      value: `${stats.standby} (${total ? Math.round((stats.standby / total) * 100) : 0}%)`,
+      icon: <TrendingUpIcon color="warning" fontSize="large" />
+    },
+    {
+      label: "Total Trains",
+      value: total,
+      icon: <ScienceIcon color={modelStatus === "trained" ? "primary" : "action"} fontSize="large" />
+    }
+  ];
+};
 
 const failurePredictions = [
   {
@@ -152,14 +166,12 @@ export default function MLAnalysis() {
   };
 
   const getStatusColor = (task) => {
-    switch (task) {
-      case "run":
+    switch (task.toLowerCase()) {
+      case "service":
         return "success";
       case "maintenance":
         return "error";
-      case "branding":
-        return "info";
-      case "cleaning":
+      case "standby":
         return "warning";
       default:
         return "default";

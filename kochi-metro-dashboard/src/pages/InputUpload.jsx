@@ -63,8 +63,23 @@ export default function InputUpload() {
       const res = await fetch(`${API_BASE}/ingest/upload/`, { method: "POST", body: form });
       if (!res.ok) throw new Error(`Upload failed (${res.status})`);
       const json = await res.json();
-      setUploadedFiles([...uploadedFiles, { name: csvFile.name, type: "CSV Ingest" }]);
-      setSnackbar({ open: true, msg: `Ingested: ${json.inserted.trainsets} trainsets`, success: true });
+      
+      // Add the file with ingestion details to uploadedFiles
+      setUploadedFiles([...uploadedFiles, { 
+        name: csvFile.name, 
+        type: "CSV Ingest",
+        details: json.inserted
+      }]);
+      
+      setSnackbar({ 
+        open: true, 
+        msg: `Successfully ingested data:\n${Object.entries(json.inserted)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ')}`, 
+        success: true 
+      });
+      
+      // Reset the form
       setSelectedFiles([null, null, null, null]);
       fileInputs.current.forEach(ref => { if (ref.current) ref.current.value = ""; });
     } catch (e) {
@@ -136,12 +151,26 @@ export default function InputUpload() {
               Uploaded Files
             </Typography>
             {uploadedFiles.map((f, idx) => (
-              <Box key={f.name + idx} mb={0.5}>
-                <InsertDriveFileIcon sx={{ verticalAlign: "middle", mr: 1, fontSize: 18, color: "primary.main" }} />
-                {f.name}
-                <Typography variant="caption" color="text.secondary" ml={1}>
-                  ({f.type})
-                </Typography>
+              <Box key={f.name + idx} mb={2}>
+                <Box display="flex" alignItems="center" mb={1}>
+                  <InsertDriveFileIcon sx={{ verticalAlign: "middle", mr: 1, fontSize: 18, color: "primary.main" }} />
+                  {f.name}
+                  <Typography variant="caption" color="text.secondary" ml={1}>
+                    ({f.type})
+                  </Typography>
+                </Box>
+                {f.details && (
+                  <Box ml={3}>
+                    <Typography variant="body2" color="text.secondary">
+                      Data Ingested:
+                    </Typography>
+                    {Object.entries(f.details).map(([key, value]) => (
+                      <Typography key={key} variant="caption" display="block" color="text.secondary" ml={1}>
+                        • {key}: {value} records
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
               </Box>
             ))}
           </Paper>

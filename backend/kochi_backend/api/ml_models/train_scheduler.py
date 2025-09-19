@@ -189,27 +189,72 @@ class TrainScheduler:
 
     def _determine_task(self, train_data):
         """Determine primary task for the train"""
-        if train_data['jobs']:
+        train = train_data['train']
+        
+        # Check for active maintenance requirements
+        open_jobs = [j for j in train_data['jobs'] if j['status'].lower() == 'open']
+        if open_jobs:
             return 'maintenance'
-        if train_data['branding']:
-            return 'branding'
-        if train_data['cleaning']:
-            return 'cleaning'
-        return 'run'
+            
+        # Calculate service hours and determine if standby is needed
+        current_hour = datetime.now().hour
+        mileage = float(train.get('mileage', 0))
+        passengers = int(train.get('passengers', 0))
+        
+        # Peak hours: 6-10 AM and 4-8 PM
+        is_peak_hour = (6 <= current_hour <= 10) or (16 <= current_hour <= 20)
+        
+        # Standby conditions:
+        # 1. Low mileage (less used trains)
+        # 2. Non-peak hours
+        # 3. Low passenger count
+        if not is_peak_hour and (mileage < 5000 or passengers < 1000):
+            return 'standby'
+            
+        # Service conditions:
+        # 1. Peak hours
+        # 2. High passenger demand
+        # 3. Regular rotation
+        return 'service'
 
     def _generate_reasoning(self, train_data, time_slot):
         """Generate explanation for the schedule decision"""
         train = train_data['train']
         reasons = []
+        current_hour = datetime.now().hour
+        is_peak_hour = (6 <= current_hour <= 10) or (16 <= current_hour <= 20)
         
+        # Check maintenance status
+        open_jobs = [j for j in train_data['jobs'] if j['status'].lower() == 'open']
+        if open_jobs:
+            reasons.append(f"Maintenance required: {len(open_jobs)} open job cards")
+            
+        # Operational metrics
+        mileage = float(train.get('mileage', 0))
+        passengers = int(train.get('passengers', 0))
+        
+        # Service/Standby reasoning
+        if not open_jobs:
+            if is_peak_hour:
+                reasons.append("Peak hour operation (high demand period)")
+            else:
+                reasons.append("Non-peak hour operation")
+                
+            if mileage >= 5000:
+                reasons.append(f"High utilization train (mileage: {mileage})")
+            else:
+                reasons.append(f"Low utilization train (mileage: {mileage})")
+                
+            if passengers >= 1000:
+                reasons.append(f"High passenger load ({passengers} passengers)")
+            else:
+                reasons.append(f"Low passenger load ({passengers} passengers)")
+                
+        # Fitness certificate status
         if train.get('fitness') == 'Valid':
             reasons.append("Fitness certificate valid")
-        
-        if not train_data['jobs']:
-            reasons.append("No pending maintenance")
-            
-        if train_data['cleaning'].get('status') == 'Completed':
-            reasons.append("Cleaning completed")
+        else:
+            reasons.append(f"Fitness status: {train.get('fitness', 'Unknown')}")
             
         return "; ".join(reasons)
 
