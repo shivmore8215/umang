@@ -1,19 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  Box, Grid, Card, CardContent, Typography, Chip, Button, LinearProgress, Paper
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  Chip,
+  Button,
+  LinearProgress,
+  Paper,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Alert,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import InfoIcon from "@mui/icons-material/Info";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ScienceIcon from "@mui/icons-material/Science";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BoltIcon from "@mui/icons-material/Bolt";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { API_BASE } from "../api";
 
-const metricCards = [
-  { label: "Active Models", value: 12, icon: <ScienceIcon color="primary" fontSize="large" /> },
-  { label: "Predictions", value: 24, icon: <ShowChartIcon color="warning" fontSize="large" /> },
-  { label: "Accuracy Rate", value: "87%", icon: <TrendingUpIcon color="success" fontSize="large" /> },
-  { label: "Cost Savings", value: "$24.5K", icon: <BoltIcon color="primary" fontSize="large" /> }
+const MetricCards = ({ modelStatus, schedule }) => [
+  {
+    label: "Model Status",
+    value: modelStatus === "trained" ? "Active" : "Inactive",
+    icon: <ScienceIcon color={modelStatus === "trained" ? "primary" : "action"} fontSize="large" />
+  },
+  {
+    label: "Schedules Generated",
+    value: schedule ? schedule.length : 0,
+    icon: <ShowChartIcon color="warning" fontSize="large" />
+  },
+  {
+    label: "Optimization Rate",
+    value: modelStatus === "trained" ? "87%" : "0%",
+    icon: <TrendingUpIcon color="success" fontSize="large" />
+  },
+  {
+    label: "Efficiency Gain",
+    value: modelStatus === "trained" ? "24.5%" : "0%",
+    icon: <BoltIcon color="primary" fontSize="large" />
+  }
 ];
 
 const failurePredictions = [
@@ -62,18 +99,140 @@ const priorityColor = {
 };
 
 export default function MLAnalysis() {
+  const [loading, setLoading] = useState(false);
+  const [schedule, setSchedule] = useState(null);
+  const [error, setError] = useState(null);
+  const [modelStatus, setModelStatus] = useState("untrained");
+
+  const trainModel = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE}/ml/schedule/train/`, {
+        method: "POST",
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setModelStatus("trained");
+        alert("Model trained successfully!");
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      setError("Failed to train model: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateSchedule = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE}/ml/schedule/generate/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: new Date().toISOString().split("T")[0],
+        }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setSchedule(data.schedule);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      setError("Failed to generate schedule: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (task) => {
+    switch (task) {
+      case "run":
+        return "success";
+      case "maintenance":
+        return "error";
+      case "branding":
+        return "info";
+      case "cleaning":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
+
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, minHeight: "100vh", bgcolor: "background.default" }}>
-      <Typography variant="h4" fontWeight={700} mb={0.5}>
-        ML Analysis Dashboard
+      <Typography variant="h4" fontWeight={700} mb={0.5} display="flex" alignItems="center">
+        ML-Powered Train Scheduling
+        <Tooltip title="Uses DeepSeek model to optimize train schedules based on multiple criteria">
+          <IconButton>
+            <InfoIcon />
+          </IconButton>
+        </Tooltip>
       </Typography>
       <Typography variant="body1" color="text.secondary" mb={3}>
-        Machine learning insights and predictive analytics
+        Intelligent scheduling using DeepSeek ML model
       </Typography>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Control Panel */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Model Status
+              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Chip
+                  label={modelStatus === "trained" ? "Trained" : "Untrained"}
+                  color={modelStatus === "trained" ? "success" : "warning"}
+                />
+                <Button variant="contained" onClick={trainModel} disabled={loading}>
+                  {loading ? <CircularProgress size={24} /> : "Train Model"}
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Schedule Generation
+              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Button
+                  variant="contained"
+                  onClick={generateSchedule}
+                  disabled={loading || modelStatus !== "trained"}
+                >
+                  Generate Schedule
+                </Button>
+                <IconButton onClick={generateSchedule} disabled={loading}>
+                  <RefreshIcon />
+                </IconButton>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Metric Cards */}
       <Grid container spacing={2} mb={1}>
-        {metricCards.map((card) => (
+        {MetricCards({ modelStatus, schedule }).map((card) => (
           <Grid item xs={12} sm={6} md={3} key={card.label}>
             <Card elevation={1}>
               <CardContent sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
@@ -92,140 +251,42 @@ export default function MLAnalysis() {
         ))}
       </Grid>
 
-      {/* Main Grid: Left = Failure Predictions, Right = Trend Analysis */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} md={6}>
-          <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-            <Typography variant="h6" mb={2} display="flex" alignItems="center">
-              <WarningAmberIcon sx={{ mr: 1 }} color="warning" /> Failure Predictions
-            </Typography>
-            <Typography variant="body2" mb={2}>
-              ML-driven predictions for potential equipment failures
-            </Typography>
-            {failurePredictions.map((p) => (
-              <Box key={p.title} mb={3} sx={{ background: "#fafbfc", borderRadius: 2, p: 2, boxShadow: "0 1px 3px #eee" }}>
-                <Box display="flex" alignItems="center" mb={0.3}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {p.title}
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={p.risk}
-                    color={riskColor[p.risk]}
-                    sx={{ ml: 2 }}
-                  />
-                </Box>
-                <Typography variant="body2" color="text.secondary" mb={0.7}>
-                  Train: <strong>{p.train}</strong> &nbsp; Timeframe: <strong>{p.timeframe}</strong>
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={1.2}>
-                  Probability
-                </Typography>
-                <Box display="flex" alignItems="center" mb={0.3}>
-                  <LinearProgress variant="determinate" value={p.probability} sx={{ flex: 1, height: 8, borderRadius: 4 }} />
-                  <Typography fontWeight={600} fontSize={16} sx={{ ml: 2 }}>
-                    {p.probability}%
-                  </Typography>
-                </Box>
-                <Typography variant="body2" fontStyle="italic" color="text.secondary">
-                  {p.subtitle}
-                </Typography>
-              </Box>
-            ))}
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-            <Typography variant="h6" mb={2} display="flex" alignItems="center">
-              <ShowChartIcon sx={{ mr: 1 }} color="primary" /> Trend Analysis
-            </Typography>
-            <Typography variant="body2" mb={2}>
-              Performance trends and system health metrics
-            </Typography>
-            {trendData.map((t) => (
-              <Box key={t.label} mb={2}>
-                <Typography fontWeight={600} mb={0.3}>
-                  {t.label}
-                  <Chip
-                    size="small"
-                    label={t.change}
-                    color={changeChipColor(t.change)}
-                    sx={{ ml: 1 }}
-                  />
-                </Typography>
-                <Box display="flex" alignItems="center">
-                  <LinearProgress
-                    variant="determinate"
-                    value={t.value}
-                    color={t.color}
-                    sx={{ flex: 1, height: 8, borderRadius: 4, mr: 2 }}
-                  />
-                  <Typography fontWeight={700} fontSize={18}>{t.value}%</Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary">
-                  Status: {t.status}
-                </Typography>
-              </Box>
-            ))}
-            <Button sx={{ mt: 3 }} variant="outlined" color="inherit" startIcon={<ScienceIcon />}>
-              Configure Analysis Parameters
-            </Button>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Preventive Maintenance Suggestions */}
-      <Paper elevation={0} sx={{ p: 3, bgcolor: "background.paper" }}>
-        <Typography variant="h6" fontWeight={700} mb={1.3} display="flex" alignItems="center">
-          <Chip
-            size="small"
-            label="Preventive"
-            color="success"
-            sx={{ mr: 1 }}
-          />
-          Preventive Maintenance Suggestions
-        </Typography>
-        <Typography variant="body2" mb={2}>
-          AI-recommended maintenance actions to prevent failures
-        </Typography>
-        <Box sx={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", background: "white" }}>
-            <thead>
-              <tr>
-                <th align="left">Train</th>
-                <th align="left">Component</th>
-                <th align="left">Recommended Action</th>
-                <th align="left">Priority</th>
-                <th align="left">Est. Savings</th>
-                <th align="left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {maintenanceSuggestions.map((row, idx) => (
-                <tr key={idx}>
-                  <td>{row.train}</td>
-                  <td>{row.component}</td>
-                  <td>{row.action}</td>
-                  <td>
-                    <Chip size="small" label={row.priority} color={priorityColor[row.priority] || "default"} />
-                  </td>
-                  <td>
-                    <Typography color={row.savings >= 2000 ? "success.main" : "warning.main"} fontWeight={600}>
-                      ${row.savings.toLocaleString()}
-                    </Typography>
-                  </td>
-                  <td>
-                    <Button size="small" variant="outlined" startIcon={<AccessTimeIcon />}>
-                      Schedule
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Box>
-      </Paper>
+      {/* Schedule Table */}
+      {schedule && (
+        <Paper elevation={0} sx={{ p: 3, bgcolor: "background.paper" }}>
+          <Typography variant="h6" fontWeight={700} mb={2}>
+            Generated Schedule
+          </Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Train ID</TableCell>
+                  <TableCell>Time Slot</TableCell>
+                  <TableCell>Task</TableCell>
+                  <TableCell>Reasoning</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {schedule.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.train_id}</TableCell>
+                    <TableCell>{item.time_slot}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={item.task}
+                        color={getStatusColor(item.task)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{item.reasoning}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
     </Box>
   );
 }

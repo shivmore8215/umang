@@ -14,7 +14,9 @@ import translations from "./locales";
 function App() {
   const [mode, setMode] = useState("light");
   const [lang, setLang] = useState("en");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
 
   const theme = useMemo(
     () => createTheme({ palette: { mode } }),
@@ -22,14 +24,24 @@ function App() {
   );
   const t = translations[lang];
 
-  if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
-  }
+  const handleLogin = (username) => {
+    setIsLoggedIn(true);
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('user', username);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
+      {!isLoggedIn ? (
+        <Login onLogin={handleLogin} mode={mode} setMode={setMode} />
+      ) : (
         <Routes>
           <Route
             path="/"
@@ -40,7 +52,7 @@ function App() {
                 lang={lang}
                 setLang={setLang}
                 t={t}
-                onLogout={() => setIsLoggedIn(false)}
+                onLogout={handleLogout}
               />
             }
           />
@@ -53,7 +65,7 @@ function App() {
                 lang={lang}
                 setLang={setLang}
                 t={t}
-                onLogout={() => setIsLoggedIn(false)}
+                onLogout={handleLogout}
               />
             }
           />
@@ -66,7 +78,7 @@ function App() {
                 lang={lang}
                 setLang={setLang}
                 t={t}
-                onLogout={() => setIsLoggedIn(false)}
+                onLogout={handleLogout}
               />
             }
           />
@@ -79,7 +91,7 @@ function App() {
                 lang={lang}
                 setLang={setLang}
                 t={t}
-                onLogout={() => setIsLoggedIn(false)}
+                onLogout={handleLogout}
               />
             }
           />
@@ -92,7 +104,7 @@ function App() {
                 lang={lang}
                 setLang={setLang}
                 t={t}
-                onLogout={() => setIsLoggedIn(false)}
+                onLogout={handleLogout}
               />
             }
           />
@@ -105,12 +117,12 @@ function App() {
                 lang={lang}
                 setLang={setLang}
                 t={t}
-                onLogout={() => setIsLoggedIn(false)}
+                onLogout={handleLogout}
               />
             }
           />
         </Routes>
-      </BrowserRouter>
+      )}
     </ThemeProvider>
   );
 }

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import ml_endpoints
 
 urlpatterns = [
     path("stats/overview/", views.stats_overview),
@@ -29,6 +30,9 @@ urlpatterns = [
 
     path("reports/pdf/", views.report_pdf),
     path("reports/csv/", views.report_csv),
-
     path("ingest/upload/", views.ingest_upload),
+
+    # DeepSeek ML endpoints
+    path("ml/schedule/train/", ml_endpoints.train_model),
+    path("ml/schedule/generate/", ml_endpoints.generate_schedule),
 ]

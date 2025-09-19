@@ -20,6 +20,9 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     // Demo logic - replace with Django API call later
     if (username === "admin" && password === "railway123") {
+      // Store auth data in localStorage
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('user', username);
       if (onLogin) onLogin(username);
     } else {
       alert("Invalid credentials. (Demo: admin / railway123)");

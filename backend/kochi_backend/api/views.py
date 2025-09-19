@@ -11,11 +11,24 @@ import io
 @permission_classes([AllowAny])
 def stats_overview(request):
     db = get_db()
+    # Get real-time stats from database
+    trains_ready = db.trainsets.count_documents({"status": "Active"})
+    maintenance_alerts = db.jobcards.count_documents({"status": "open"})
+    ad_deadlines = db.branding_campaigns.count_documents({
+        "status": "Active",
+        "hours_left": {"$lt": 168}  # Less than a week
+    })
+    
+    # Get total number of trains
+    total_trains = db.trainsets.count_documents({})
+    system_health = (trains_ready / total_trains * 100) if total_trains > 0 else 98.2
+    
     data = {
-        "trainsReady": 147,
-        "maintenanceAlerts": 8,
-        "adDeadlines": 3,
-        "systemHealth": 98.2,
+        "trainsReady": trains_ready,
+        "totalTrains": total_trains,  # Added total trains count
+        "maintenanceAlerts": maintenance_alerts,
+        "adDeadlines": ad_deadlines,
+        "systemHealth": round(system_health, 1),
     }
     return Response(data)
 
